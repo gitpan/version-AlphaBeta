@@ -5,8 +5,10 @@ my $class = Module::Build->subclass
 (
     class => 'version::Builder',
     code => q{
-    sub ACTION_Changes {
-    	Module::Build->do_system('svn log -v | gnuify-changelog.pl > Changes' );
+    sub ACTION_dist{
+        my $self = shift;
+    	$self->do_system('svk log -v | gnuify-changelog.pl > Changes');
+	$self->SUPER::ACTION_dist();
 	}
     },
 );

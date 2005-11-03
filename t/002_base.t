@@ -5,7 +5,7 @@
 
 # change 'tests => 1' to 'tests => last_test_to_print';
 
-use Test::More tests => 31;
+use Test::More tests => 37;
 BEGIN { use_ok('version::AlphaBeta') };
 
 diag "Tests with base class" unless $ENV{PERL_CORE};
@@ -55,4 +55,9 @@ sub BaseTests {
     like($@, qr/Illegal version string format/, substr($@,0,index($@," at ")) );
     eval { my $v3 = new $class "1.2.3" };
     like($@, qr/Illegal version string format/, substr($@,0,index($@," at ")) );
+
+    # reported by Bhavesh Jardosh <perltastic@gmail.com>
+    isnt ( $v2, undef, "comparison with undef" );
+    isnt ( $v2, 'nothing', "comparison with string" );
+    isnt ( $v2, '1.2.3', "comparison with illegal version format" );
  }

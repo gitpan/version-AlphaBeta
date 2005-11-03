@@ -16,7 +16,7 @@ use vars qw(@ISA $VERSION %IB %OB $TYPE);
 
 @ISA = qw(Exporter version);
 
-$VERSION = '0.04';
+$VERSION = '0.05';
 
 %IB = (
     'a' => -3,
@@ -80,7 +80,13 @@ sub spaceship {
     my $test;
     
     unless ( UNIVERSAL::isa($right, ref($left)) ) {
-	$right = $left->new($right);
+	# try to bless $right into our class
+	eval {
+	    $right = $left->new($right);
+	};
+	if ($@) {
+	    return -1;
+	}
     }
 
     my $max = $#$left > $#$right ? $#$left : $#$right;

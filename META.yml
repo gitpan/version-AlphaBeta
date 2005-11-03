@@ -1,15 +1,14 @@
---- #YAML:1.0
+---
 name: version-AlphaBeta
-version: 0.04
+version: 0.05
+author:
+  - 'John Peacock, E<lt>jpeacock@cpan.orgE<gt>'
+abstract: Use alphanumeric version objects
 license: perl
-distribution_type: module
 requires:
   version: 0.32
-recommends: {}
-build_requires: {}
-conflicts: {}
 provides:
   version::AlphaBeta:
     file: lib/version/AlphaBeta.pm
-    version: 0.04
-generated_by: Module::Build version 0.21
+    version: 0.05
+generated_by: Module::Build version 0.2701
