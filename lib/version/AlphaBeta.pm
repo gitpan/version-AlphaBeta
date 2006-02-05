@@ -12,11 +12,11 @@ use overload (
     'cmp' => \&spaceship,
 );
 
-use vars qw(@ISA $VERSION %IB %OB $TYPE);
+use vars qw($VERSION %IB %OB $TYPE);
 
-@ISA = qw(Exporter version);
+use base qw(version);
 
-$VERSION = '0.05';
+$VERSION = '0.06';
 
 %IB = (
     'a' => -3,
@@ -54,6 +54,10 @@ sub new {
 	unless scalar(@value) >= 2  # something matched
 	    and scalar(@value) <= 4;# but not too much
 
+    die "Illegal version string format:  \"$ival\""
+    	if $value[0] == 0 and $value[1] == 0
+	    and defined $value[2]; # cannot be 0.0b1
+
     $value[2] = $IB{
 	(defined $value[2] ? $value[2] : "")
     }; 
@@ -72,6 +76,31 @@ sub stringify {
     my $fmt = "%d.%d".
     	(defined $values[2] ? "%s" : "").
     	(defined $values[3] ? "%d" : "");
+    return sprintf($fmt,@values);
+}
+
+sub numify {
+    my $self = shift;
+    my @values = @$self;
+
+    $values[1] *= ($values[1] < 10 ? 100 : 10); # 3 decimal-places needed
+    if ( defined $values[2] ) { # need to handle specially
+	if ($values[2]  < 0 ) {
+	    $values[2] += 1000;
+	    $values[1] -= 1;
+	}
+	if ($values[1]  < 0 ) {
+	    $values[1] += 1000;
+	    $values[0] -= 1;
+	}
+    }
+    if ( defined $values[3] ) {
+	$values[3] *= ($values[3] < 10 ? 100 : 10); # 3 decimal-places
+    }
+
+    my $fmt = "%d.%03d".
+    	(defined $values[2] ? "%03d" : "").
+    	(defined $values[3] ? "%03d" : "");
     return sprintf($fmt,@values);
 }
 
@@ -117,7 +146,6 @@ sub is_beta {
 
 1;
 __END__
-# Below is stub documentation for your module. You'd better edit it!
 
 =head1 NAME
 
@@ -126,7 +154,7 @@ version::AlphaBeta - Use alphanumeric version objects
 =head1 SYNOPSIS
 
   use version::AlphaBeta;
-  $VERSION = new version::AlphaBeta "v1.2b";
+  $VERSION = version::AlphaBeta->new("v1.2b");
 
 =head1 ABSTRACT
 
@@ -151,7 +179,8 @@ instead of strictly numeric versions.  Sorted in increasing order:
   1.3rc       1.3 release candidate
   1.3rc2      1.3 second release candidate
   1.3         1.3 final release
-  1.3p1       1.3 first patch release
+  1.3pl       1.3 first patch release
+  1.3pl2      1.3 second patch release
 
 =back
 
@@ -160,19 +189,39 @@ objects.  The global hash object %IB defines the acceptable non-numeric
 version parameters:
 
   %IB = (
-      'a' => 1,
-      'b' => 2,
-      'rc'=> 3,
-      ''  => 4,
-      'pl'=> 5
+      'a' => -3,
+      'b' => -2,
+      'rc'=> -1,
+      ''  =>  0,
+      'pl'=>  1
   );
 
 which, if present at all, must be located in the third sub-version.
 
 =head2 OBJECT METHODS
 
-This module provides two additional logical methods, apart from 
-those already exported by the base version class.
+This module overrides one of the base version object methods:
+
+=over 4
+
+=item * numify()
+
+In order to safely compare version::AlphaBeta objects with non-objects
+or base version objects without using the overloaded comparison operators,
+for example in Module::Build, this module provides a numification operator.
+The floating point number returned may not be immediately obvious, but it
+it designed to sort in a consistent fashion as a number.
+
+  $v = version::AlphaBeta->new("1.0a1");  # 0.999997100
+  $v = version::AlphaBeta->new("1.0b1");  # 0.999998100
+  $v = version::AlphaBeta->new("1.0rc1"); # 0.999999100
+  $v = version::AlphaBeta->new("1.0");    # 1.000000
+  $v = version::AlphaBeta->new("1.0pl1"); # 1.000001100
+
+=back
+
+Additionally, this module provides two additional logical methods, apart
+from those already provided by the base version class.
 
 =over 4
 
@@ -183,10 +232,6 @@ only if the version has an 'a' in the third position, i.e.
 
   $VERSION = new version::AlphaBeta "1.3a1";
   print $VERSION->is_alpha; # prints 1
-
-=back
-
-=over 4
 
 =item * is_beta
 
@@ -212,7 +257,7 @@ John Peacock, E<lt>jpeacock@cpan.orgE<gt>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2003,2004 by John Peacock
+Copyright 2003,2004,2005,2006 by John Peacock
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself. 

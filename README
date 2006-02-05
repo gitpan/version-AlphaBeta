@@ -1,12 +1,11 @@
-version::AlphaBeta 0.05
+version::AlphaBeta 0.06
 -----------------------
 
 Derived class of version objects which permits use of specific
 alphanumeric version objects, patterned after the version strings
 used by many open source programs, like Mozilla.
 
-Minor changes to be more conservative when auto-creating objects
-during overloaded comparisons.
+Implement the numify() operator to overload the base object method.
 
 Please see the enclose POD for more details and instructions for how to
 use the module.
